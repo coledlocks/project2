@@ -53,7 +53,7 @@ plt.plot(decimated_time, decimated_signal, linestyle='--', label='Decimated Sign
 
 # annotating figure
 plt.xlabel('Time (s)')
-plt.ylabel('Amplitude (units)')
+plt.ylabel('Amplitude (a.u.)')
 plt.title('Original and Decimated Signal Comparison')
 plt.legend()
 plt.xlim([0.5, 0.51])
@@ -76,16 +76,30 @@ template_match = p2m.get_template_match(decimated_signal, template)
 
 # plotting the template match
 plt.figure(2, clear=True)
+# plotting the original signal
 plt.subplot(3, 1, 1)
-plt.plot(decimated_time, decimated_signal, linestyle='--', label='Decimated Signal')
-plt.xlim([0.5, 0.51])
-plt.ylim([-0.5,0.5])
-# plt.subplot(3, 1, 2)
-# plt.plot(decimated)
+plt.plot(decimated_time, decimated_signal, linestyle='-', label='Decimated Signal')
+plt.xlim([0, 5])
+plt.ylim([-0.5, 0.5])
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude (a.u.)')
+
+# plotting the template
+plt.subplot(3, 1, 2)
+plt.plot(template)
+plt.xlim([0, 5])
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude (a.u.)')
 plt.subplot(3, 1, 3)
+
+# plotting the correlation signal
 plt.plot(decimated_time, template_match)
-plt.xlim([0.5, 0.51])
-plt.ylim([-0.5,0.5])
+plt.xlim([0, 5])
+plt.ylim([-0.5, 0.5])
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude (a.u.)')
+
+#%%
     
     
     
