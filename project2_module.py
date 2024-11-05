@@ -57,6 +57,11 @@ def get_template_match(signal_voltage, template):
     # convolving the folded signal with the voltage to get the correlation
     template_match = np.convolve(signal_voltage, folded_template, mode='same')
     return template_match
+
+#%% PART 5: choosing a threshold
+
+def predict_beat_times(template_match, threshold):
+    
     
     
     
