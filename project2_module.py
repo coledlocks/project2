@@ -45,6 +45,8 @@ def normalize_template(trial_mean):
     
     return template
 
+# %% PART 4:
+
 
 
 
