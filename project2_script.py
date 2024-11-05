@@ -46,10 +46,12 @@ else:
     # Adjust label_samples
     decimated_label_samples = label_samples / decimation_factor
     
-# Plot the original and decimated signals for the selected lead
-plt.figure(1)
+# plotting the original and decimated signals for the selected lead
+plt.figure(1, clear=True)
 plt.plot(original_time, original_signal, label='Original Signal')
 plt.plot(decimated_time, decimated_signal, linestyle='--', label='Decimated Signal')
+
+# annotating figure
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude (units)')
 plt.title('Original and Decimated Signal Comparison')
@@ -57,27 +59,38 @@ plt.legend()
 plt.xlim([0.5, 0.51])
 plt.ylim([-0.1,0.1])
 
-# %% PART 3
-normal_index = np.where(symbols == 'V')[0][0]
+# %% 
+normal_index = np.where(symbols == 'N')[0][0]
 
 # Extract the mean signal for the normal beat
 trial_mean = mean_trial_signal[normal_index]
 
 # Normalize the template
 template = p2m.normalize_template(trial_mean)
+print("Units of the template: 1 / V")
 
-plt.figure(2, figsize=(10, 5))
-plt.plot(trial_mean, label='Original Mean Signal')
-plt.plot(template, label='Normalized Template')
-plt.xlabel('Sample Index')
-plt.ylabel('Amplitude')
-plt.title('Original Mean Signal vs. Normalized Template')
-plt.legend()
-plt.grid(True)
-plt.show()
+# %%
 
-# %% PART 4
+# matching the template
+template_match = p2m.get_template_match(decimated_signal, template)
 
-
-
-
+# plotting the template match
+plt.figure(2, clear=True)
+plt.subplot(3, 1, 1)
+plt.plot(decimated_time, decimated_signal, linestyle='--', label='Decimated Signal')
+plt.xlim([0.5, 0.51])
+plt.ylim([-0.5,0.5])
+# plt.subplot(3, 1, 2)
+# plt.plot(decimated)
+plt.subplot(3, 1, 3)
+plt.plot(decimated_time, template_match)
+plt.xlim([0.5, 0.51])
+plt.ylim([-0.5,0.5])
+    
+    
+    
+    
+    
+    
+    
+    
