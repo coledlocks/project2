@@ -31,15 +31,19 @@ def load_means(input_file):
 
 #%% PART 2: resampling data
 
-# def decimate_data(original_signal, decimation_factor):
+def decimate_data(original_signal, decimation_factor):
+    # Extract every nth sample from the original signal where n is the decimation factor
+    decimated_signal = original_signal[::decimation_factor]
+    return decimated_signal
     
+# %% PART 3: normalize signal
 
-
-
-
-
-
-
+def normalize_template(trial_mean):
+    demeaned_signal = trial_mean - np.mean(trial_mean)
+    energy = np.sum(demeaned_signal ** 2)
+    template = demeaned_signal / energy
+    
+    return template
 
 
 
