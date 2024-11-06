@@ -49,19 +49,47 @@ def normalize_template(trial_mean):
 
 #%% PART 4: match data to template
 
+# def get_template_match(signal_voltage, template):
+#     # folding the template
+#     folded_template = np.array([])
+#     for fold_index in range(len(template)):
+#         folded_template = np.append(folded_template, -1*(template[fold_index]))
+#     # convolving the folded signal with the voltage to get the correlation
+#     template_match = np.convolve(signal_voltage, folded_template, mode='same')
+#     return template_match
+
+#%% PART 4: template match
 def get_template_match(signal_voltage, template):
-    # folding the template
-    folded_template = np.array([])
-    for fold_index in range(len(template)):
-        folded_template = np.append(folded_template, -1*(template[fold_index]))
-    # convolving the folded signal with the voltage to get the correlation
-    template_match = np.convolve(signal_voltage, folded_template, mode='same')
-    return template_match
-
-#%% PART 5: choosing a threshold
-
-def predict_beat_times(template_match, threshold):
+    # Reverse the template for cross-correlation
+    reversed_template = template[::-1]
     
+    # Compute the cross-correlation using convolution
+    template_match = np.convolve(signal_voltage, reversed_template, mode='same')
     
+    return template_match   
+# %% PART 5
+def predict_beat_times(template_match, threshold=None):
+    if threshold is None:
+        threshold = 0.5 * np.max(template_match)
     
+    above_threshold = template_match > threshold
     
+    # Find where the signal crosses the threshold from below
+    crossings = (above_threshold[1:] & (~above_threshold[:-1]))
+    
+    # The indices where crossings occur are the beat samples
+    beat_samples = np.where(crossings)[0] + 1  # Add 1 because of the shift
+    
+    return beat_samples, threshold
+# %% PART 6
+def run_beat_detection(trial_mean, signal_voltage, threshold):
+    # Normalize the template
+    template = normalize_template(trial_mean)
+    
+    # Cross-correlate the template with the signal voltage
+    template_match = get_template_match(signal_voltage, template)
+    
+    # Predict beat times using the threshold
+    beat_samples, threshold_used = predict_beat_times(template_match, threshold=threshold)
+    
+    return beat_samples, template_match

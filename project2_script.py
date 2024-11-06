@@ -60,7 +60,7 @@ plt.xlim([0.5, 0.51])
 plt.ylim([-0.1,0.1])
 
 # %% 
-normal_index = np.where(symbols == 'N')[0][0]
+normal_index = np.where(symbols == 'V')[0][0]
 
 # Extract the mean signal for the normal beat
 trial_mean = mean_trial_signal[normal_index]
@@ -100,8 +100,9 @@ plt.xlabel('Time (s)')
 plt.ylabel('Amplitude (a.u.)')
 
 #%%
-    
-    
+
+
+   
     
     
     
