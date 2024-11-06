@@ -56,6 +56,7 @@ plt.title('Original and Decimated Signal Comparison')
 plt.legend()
 plt.xlim([0.5, 0.51])
 plt.ylim([-0.1,0.1])
+plt.savefig(f'original_and_decimated_signal_comparison_subject_{subject_id}.png')
 
 # %% PART 3
 normal_index = np.where(symbols == 'V')[0][0]
@@ -76,15 +77,14 @@ template_match = p2m.get_template_match(ecg_voltage, template)
 ecg_time = np.arange(len(ecg_voltage)) / fs
 
 # Plotting the cross-correlation
-plt.figure(figsize=(12, 6))
+plt.figure(2, clear=True)
 plt.plot(ecg_time, template_match)
 plt.xlim(200,201)
 plt.xlabel('Time (s)')
 plt.ylabel('Cross-correlation (dimensionless)')
 plt.title('Template Matching using Cross-Correlation')
 plt.grid(True)
-plt.show()
-
+plt.savefig(f'cross_correlation_raw_and_template_data_subject_{subject_id}.png')
 #%% PART 5: Detect Beats
 
 # Use the default threshold
@@ -93,7 +93,7 @@ beat_samples, threshold = p2m.predict_beat_times(template_match)
 # Convert beat samples to times
 beat_times = beat_samples / fs
 
-plt.figure()
+plt.figure(3, clear=True)
 plt.plot(ecg_time, template_match, label='Cross-correlation')
 plt.plot(beat_times, template_match[beat_samples], 'v', label='Detected Beats')
 plt.xlabel('Time (s)')
@@ -101,7 +101,7 @@ plt.ylabel('Cross-correlation (dimensionless)')
 plt.title('Template Matching with Detected Beats')
 plt.legend()
 plt.xlim(10, 12)  
-
+plt.savefig(f'detected_normal_beats_subject_{subject_id}.png')
 #%% PART 6: Detect Arrhythmic Beats
 # Extract the mean signal for the normal beat
 normal_trial_mean = mean_trial_signal[normal_index]
