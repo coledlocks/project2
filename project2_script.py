@@ -1,12 +1,18 @@
-#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 """
 project2_script.py
 
-Created on Tue Oct 29 10:57:28 2024
+Created on Tue Nov  5 20:55:43 2024
 
-@author: coledlocks
+this script uses modules from project1_module.py and project2_module.py to 
+extract and analyze data from ecg readings in order to create a template where
+matched readings can be applied to a new dataset in order to effectively
+detect normal beats and/or arrhythmic beats in a new dataset.
+
+@authors: Cole Drozdek, Matthew Bishop-Gylys
 """
+
 # importing packages
 import project2_module as p2m
 import project1_module as p1m
@@ -56,10 +62,18 @@ plt.xlabel('Time (s)')
 plt.ylabel('Amplitude (a.u.)')
 plt.title('Original and Decimated Signal Comparison')
 plt.legend()
-plt.xlim([0.5, 0.51])
+plt.xlim([0.5, 0.51]) # graph is zoomed way in to see the differences
 plt.ylim([-0.1,0.1])
 
-# %% 
+# 1) the sampling rate must exceed twice the highest signal frequency
+
+# 2) this assumption hold for ECG data -- ECG frequency is generally in the range of 0.05-100 Hz, 
+# with a sampling frequency of 250-1000 Hz (NASA), which allows room to work with with no aliasing occurring.
+
+# 3) if the assumption is incorrect, aliasing occurs, where higher frequencies can 'fold' into lower frequencies,
+# causing distorted and incorrect data.
+
+# %% PART 3
 normal_index = np.where(symbols == 'V')[0][0]
 
 # Extract the mean signal for the normal beat
@@ -69,43 +83,110 @@ trial_mean = mean_trial_signal[normal_index]
 template = p2m.normalize_template(trial_mean)
 print("Units of the template: 1 / V")
 
-# %%
+#%% PART 4: Template Matching
 
-# matching the template
-template_match = p2m.get_template_match(decimated_signal, template)
+# Call the get_template_match function
+template_match = p2m.get_template_match(ecg_voltage, template)
 
-# plotting the template match
+# Create time vector for ecg_voltage
+ecg_time = np.arange(len(ecg_voltage)) / fs
+
+# Plotting the cross-correlation
 plt.figure(2, clear=True)
-# plotting the original signal
-plt.subplot(3, 1, 1)
-plt.plot(decimated_time, decimated_signal, linestyle='-', label='Decimated Signal')
-plt.xlim([0, 5])
-plt.ylim([-0.5, 0.5])
+plt.plot(ecg_time, template_match)
+plt.xlim(200,201)
 plt.xlabel('Time (s)')
-plt.ylabel('Amplitude (a.u.)')
+plt.ylabel('Cross-correlation (dimensionless)')
+plt.title('Template Matching using Cross-Correlation')
+plt.grid(True)
+plt.show()
 
-# plotting the template
-plt.subplot(3, 1, 2)
-plt.plot(template)
-plt.xlim([0, 5])
+#%% PART 5: Detect Beats
+
+# Use the default threshold
+beat_samples = p2m.predict_beat_times(template_match)
+
+# Convert beat samples to times
+beat_times = beat_samples / fs
+
+# plotting the beats
+plt.figure(3, clear=True)
+plt.plot(ecg_time, template_match, label='Cross-correlation')
+plt.plot(beat_times, template_match[beat_samples], 'v', label='Detected Beats')
 plt.xlabel('Time (s)')
-plt.ylabel('Amplitude (a.u.)')
-plt.subplot(3, 1, 3)
+plt.ylabel('Cross-correlation (dimensionless)')
+plt.title('Template Matching with Detected Beats')
+plt.legend()
+plt.xlim(10, 12)  
 
-# plotting the correlation signal
-plt.plot(decimated_time, template_match)
-plt.xlim([0, 5])
-plt.ylim([-0.5, 0.5])
+# print statement describing the results
+print('the graph produced matches our expectations; the markers are placed right where a beat can be viewed.')
+
+#%% PART 6: Detect Arrhythmic Beats
+
+# Extract the mean signal for the normal beat
+normal_trial_mean = mean_trial_signal[normal_index]
+
+# Set threshold for normal beats
+normal_threshold = 0.5 * np.max(ecg_voltage)
+
+# Run beat detection for normal beats
+normal_beat_samples, normal_template_match = p2m.run_beat_detection(normal_trial_mean, ecg_voltage, normal_threshold)
+normal_beat_times = normal_beat_samples / fs
+
+# Find the index of the arrhythmic beat in the symbols array
+arrhythmia_index = np.where(symbols == 'N')[0][0]
+arrhythmia_trial_mean = mean_trial_signal[arrhythmia_index]
+
+# Set threshold for arrhythmic beats
+arrhythmia_threshold = 0.5 * np.max(ecg_voltage)  # Adjust as needed
+
+# Run beat detection for arrhythmic beats
+arrhythmia_beat_samples, arrhythmia_template_match = p2m.run_beat_detection(arrhythmia_trial_mean, ecg_voltage, arrhythmia_threshold)
+arrhythmia_beat_times = arrhythmia_beat_samples / fs
+
+# plotting figure
+plt.figure(4, clear=True)
+
+# ecg signal
+plt.plot(ecg_time, ecg_voltage, label='ECG Signal', color='blue', alpha=0.6)
+
+# normal template match
+plt.plot(ecg_time, normal_template_match, label='Normal Template Match', color='green', alpha=0.7)
+
+# arrhythmic template match
+plt.plot(ecg_time, arrhythmia_template_match, label='Arrhythmic Template Match', color='red', alpha=0.7)
+
+# detected normal beats
+plt.plot(normal_beat_times, normal_template_match[normal_beat_samples], 'v', color='green', markersize=8, label='Detected Normal Beats')
+
+# detected arrhythmic beats
+plt.plot(arrhythmia_beat_times, arrhythmia_template_match[arrhythmia_beat_samples], '^', color='red', markersize=8, label='Detected Arrhythmic Beats')
+
+# Plot human-annotated events (from Project 1)
+label_times = label_samples / fs
+unique_symbols = np.unique(label_symbols)
+
+# Use different markers for annotations
+annotation_markers = {'N': 'o', 'V': 'o', 'S': '_', 'F': '+'} 
+
+for symbol in unique_symbols:
+    symbol_indices = np.where(label_symbols == symbol)[0]
+    symbol_times = label_times[symbol_indices]
+    marker = annotation_markers.get(symbol)
+    plt.plot(symbol_times, np.zeros_like(symbol_times), marker, markersize=10, label=f'Annotation: {symbol}')
+
+# Labels and Legend
 plt.xlabel('Time (s)')
-plt.ylabel('Amplitude (a.u.)')
+plt.ylabel('Amplitude (V) / Cross-correlation')
+plt.title(f'ECG Signal with Detected Beats and Annotations for Subject {subject_id}')
+plt.legend(loc='upper right')
+plt.grid(True)
+plt.xlim(2919.5, 2923.5)
 
-#%%
+# Save the figure with an informative name containing the subject ID
+plt.savefig(f'beat_detection_results_subject_{subject_id}.png')
 
+# print statement about our expectations and results
+print('the graph again matched our expectations; visually the markers matched to where a signal could be observed.')
 
-   
-    
-    
-    
-    
-    
-    
